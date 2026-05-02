@@ -1,0 +1,143 @@
+/* NICE Insurance - Custom Styles */
+
+body {
+    background-color: #f4f6f9;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Login / Register pages */
+.auth-container {
+    max-width: 440px;
+    margin: 80px auto;
+}
+
+.auth-card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+}
+
+.auth-card .card-header {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    color: #fff;
+    border-radius: 12px 12px 0 0;
+    text-align: center;
+    padding: 2rem 1rem;
+}
+
+.auth-card .card-header h3 {
+    margin: 0;
+    font-weight: 700;
+}
+
+/* Dashboard stats cards */
+.stat-card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+}
+
+.stat-card .card-body {
+    padding: 1.5rem;
+}
+
+.stat-card .stat-icon {
+    font-size: 2.5rem;
+    opacity: 0.7;
+}
+
+.stat-card .stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.stat-card .stat-label {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6c757d;
+}
+
+/* Page headers */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.page-header h2 {
+    margin: 0;
+    font-weight: 700;
+    color: #1a1a2e;
+}
+
+/* Tables */
+.table-container {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    padding: 1.25rem;
+    overflow-x: auto;
+}
+
+.table thead th {
+    background-color: #1a1a2e;
+    color: #fff;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: none;
+}
+
+/* Status badges */
+.badge-current {
+    background-color: #28a745;
+}
+
+.badge-expired {
+    background-color: #dc3545;
+}
+
+/* Navbar tweaks */
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.25rem;
+}
+
+/* Modal styling */
+.modal-header {
+    background: #1a1a2e;
+    color: #fff;
+}
+
+.modal-header .btn-close {
+    filter: invert(1);
+}
+
+/* Form cards */
+.form-card {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    padding: 2rem;
+}
+
+/* Action buttons in tables */
+.btn-action {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+    margin: 0 2px;
+}
+
+/* Footer */
+footer {
+    margin-top: auto;
+}
