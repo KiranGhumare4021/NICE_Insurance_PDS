@@ -38,10 +38,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && verifyCSRFToken($_POST['csrf_token'
     exit;
 }
 
-// Fetch invoices - join through policy to get customer name
 if (isEmployee()) {
     $autoInv = $db->query("
-        SELECT i.INVOICE_ID, i.INVOICE_DATE, i.DUE_DATE, i.INVOICE_AMOUNT, i.AUTO_POLICY_ID AS POLICY_ID, ap.CUSTOMER_ID, c.FNAME, c.LNAME
+        SELECT i.INVOICE_ID, i.INVOICE_DATE, i.DUE_DATE, i.INVOICE_AMOUNT, i.AUTO_POLICY_ID AS POLICY_ID, ap.CUSTOMER_ID, c.FNAME, c.LNAME,
+            (SELECT COUNT(*) FROM JKP_AUTO_PAYMENT p WHERE p.INVOICE_ID = i.INVOICE_ID) AS PAID
         FROM JKP_AUTO_INVOICE i
         JOIN JKP_AUTO_POLICY ap ON ap.AUTO_POLICY_ID = i.AUTO_POLICY_ID
         JOIN JKP_CUSTOMER c ON c.CUSTOMER_ID = ap.CUSTOMER_ID AND c.CUSTOMER_TYPE = ap.CUSTOMER_TYPE
@@ -50,7 +50,8 @@ if (isEmployee()) {
     unset($row);
 
     $homeInv = $db->query("
-        SELECT i.INVOICE_ID, i.INVOICE_DATE, i.DUE_DATE, i.INVOICE_AMOUNT, i.HOME_POLICY_ID AS POLICY_ID, hp.CUSTOMER_ID, c.FNAME, c.LNAME
+        SELECT i.INVOICE_ID, i.INVOICE_DATE, i.DUE_DATE, i.INVOICE_AMOUNT, i.HOME_POLICY_ID AS POLICY_ID, hp.CUSTOMER_ID, c.FNAME, c.LNAME,
+            (SELECT COUNT(*) FROM JKP_HOME_PAYMENT p WHERE p.INVOICE_ID = i.INVOICE_ID) AS PAID
         FROM JKP_HOME_INVOICE i
         JOIN JKP_HOME_POLICY hp ON hp.HOME_POLICY_ID = i.HOME_POLICY_ID
         JOIN JKP_CUSTOMER c ON c.CUSTOMER_ID = hp.CUSTOMER_ID AND c.CUSTOMER_TYPE = hp.CUSTOMER_TYPE
@@ -61,7 +62,8 @@ if (isEmployee()) {
     $custId = getCurrentCustomerId();
 
     $stmt = $db->prepare("
-        SELECT i.INVOICE_ID, i.INVOICE_DATE, i.DUE_DATE, i.INVOICE_AMOUNT, i.AUTO_POLICY_ID AS POLICY_ID
+        SELECT i.INVOICE_ID, i.INVOICE_DATE, i.DUE_DATE, i.INVOICE_AMOUNT, i.AUTO_POLICY_ID AS POLICY_ID,
+            (SELECT COUNT(*) FROM JKP_AUTO_PAYMENT p WHERE p.INVOICE_ID = i.INVOICE_ID) AS PAID
         FROM JKP_AUTO_INVOICE i
         JOIN JKP_AUTO_POLICY ap ON ap.AUTO_POLICY_ID = i.AUTO_POLICY_ID
         WHERE ap.CUSTOMER_ID = ?
@@ -72,7 +74,8 @@ if (isEmployee()) {
     unset($row);
 
     $stmt = $db->prepare("
-        SELECT i.INVOICE_ID, i.INVOICE_DATE, i.DUE_DATE, i.INVOICE_AMOUNT, i.HOME_POLICY_ID AS POLICY_ID
+        SELECT i.INVOICE_ID, i.INVOICE_DATE, i.DUE_DATE, i.INVOICE_AMOUNT, i.HOME_POLICY_ID AS POLICY_ID,
+            (SELECT COUNT(*) FROM JKP_HOME_PAYMENT p WHERE p.INVOICE_ID = i.INVOICE_ID) AS PAID
         FROM JKP_HOME_INVOICE i
         JOIN JKP_HOME_POLICY hp ON hp.HOME_POLICY_ID = i.HOME_POLICY_ID
         WHERE hp.CUSTOMER_ID = ?
@@ -92,10 +95,10 @@ include '../includes/header.php';
 ?>
 
 <div class="page-header">
-    <h2><i class="bi bi-receipt"></i> Invoices</h2>
+    <h2>Invoices</h2>
     <?php if (isEmployee()): ?>
         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">
-            <i class="bi bi-plus-circle"></i> Create Invoice
+            Create Invoice
         </button>
     <?php endif; ?>
 </div>
@@ -120,7 +123,17 @@ include '../includes/header.php';
             <tr><td colspan="<?= isEmployee() ? 9 : 7 ?>" class="text-center text-muted">No invoices found.</td></tr>
         <?php else: ?>
         <?php foreach ($invoices as $inv):
-            $isPastDue = strtotime($inv['DUE_DATE']) < time();
+            $isPaid = ($inv['PAID'] ?? 0) > 0;
+            if ($isPaid) {
+                $statusLabel = 'Paid';
+                $statusClass = 'success';
+            } elseif (strtotime($inv['DUE_DATE']) < time()) {
+                $statusLabel = 'Past Due';
+                $statusClass = 'danger';
+            } else {
+                $statusLabel = 'Pending';
+                $statusClass = 'warning';
+            }
         ?>
             <tr>
                 <td><span class="badge bg-<?= $inv['SOURCE'] === 'AUTO' ? 'success' : 'info' ?>"><?= e($inv['SOURCE']) ?></span></td>
@@ -132,7 +145,7 @@ include '../includes/header.php';
                 <td><?= date('M d, Y', strtotime($inv['INVOICE_DATE'])) ?></td>
                 <td><?= date('M d, Y', strtotime($inv['DUE_DATE'])) ?></td>
                 <td>$<?= number_format($inv['INVOICE_AMOUNT'], 2) ?></td>
-                <td><span class="badge bg-<?= $isPastDue ? 'danger' : 'warning' ?>"><?= $isPastDue ? 'Past Due' : 'Pending' ?></span></td>
+                <td><span class="badge bg-<?= $statusClass ?>"><?= $statusLabel ?></span></td>
                 <?php if (isEmployee()): ?>
                 <td>
                     <form method="POST" style="display:inline;" id="deli-<?= e($inv['INVOICE_ID']) ?>">
@@ -140,7 +153,7 @@ include '../includes/header.php';
                         <input type="hidden" name="action" value="delete">
                         <input type="hidden" name="invoice_id" value="<?= e($inv['INVOICE_ID']) ?>">
                         <input type="hidden" name="source" value="<?= e($inv['SOURCE']) ?>">
-                        <button type="button" class="btn btn-sm btn-outline-danger btn-action" onclick="confirmDelete('deli-<?= e($inv['INVOICE_ID']) ?>')"><i class="bi bi-trash"></i></button>
+                        <button type="button" class="btn btn-sm btn-outline-danger btn-action" onclick="confirmDelete('deli-<?= e($inv['INVOICE_ID']) ?>')">Delete</button>
                     </form>
                 </td>
                 <?php endif; ?>
